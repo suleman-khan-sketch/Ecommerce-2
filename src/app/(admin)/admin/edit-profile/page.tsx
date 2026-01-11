@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminEditProfilePage() {
-  const profile = await fetchStaffDetails(createServerClient());
+  const profile = await fetchStaffDetails(await createServerClient());
 
   if (!profile) {
     redirect("/login");

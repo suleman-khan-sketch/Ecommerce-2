@@ -30,7 +30,7 @@ interface CustomerProfile {
 }
 
 async function getCustomerProfile(): Promise<CustomerProfile | null> {
-  const supabase = createServerClient();
+  const supabase = await createServerClient();
 
   const {
     data: { session },
@@ -45,7 +45,7 @@ async function getCustomerProfile(): Promise<CustomerProfile | null> {
 }
 
 async function getRecentOrders() {
-  const supabase = createServerClient();
+  const supabase = await createServerClient();
 
   const { data: { user } } = await supabase.auth.getUser();
   

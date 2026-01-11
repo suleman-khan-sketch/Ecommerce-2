@@ -26,7 +26,7 @@ async function getProducts(params: {
   sort?: string;
   page?: string;
 }): Promise<{ products: Product[]; categories: { id: string; name: string; slug: string }[] }> {
-  const supabase = createServerClient();
+  const supabase = await createServerClient();
 
   // Fetch categories for filter
   const { data: categories } = await supabase

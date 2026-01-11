@@ -41,8 +41,11 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(() => {
-      queryClient.invalidateQueries({ queryKey: ["user-profile"] });
+    } = supabase.auth.onAuthStateChange((event) => {
+      // Only invalidate on meaningful auth events, not on token refresh
+      if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'USER_UPDATED') {
+        queryClient.invalidateQueries({ queryKey: ["user-profile"] });
+      }
     });
 
     return () => {
@@ -53,19 +56,41 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const { data, isLoading } = useQuery({
     queryKey: ["user-profile"],
     queryFn: async () => {
-      // Use getUser() instead of getSession() for reliable auth state
-      const {
-        data: { user },
-        error,
-      } = await supabase.auth.getUser();
-      if (!user || error) {
-        return { user: null, role: null };
-      }
+      try {
+        // Use getUser() instead of getSession() for reliable auth state
+        const {
+          data: { user },
+          error,
+        } = await supabase.auth.getUser();
 
-      const { data: profile } = await supabase.rpc("get_my_profile");
-      return { user, profile: profile as UserProfile };
+        if (!user || error) {
+          return { user: null, profile: null };
+        }
+
+        const { data: profile } = await supabase.rpc("get_my_profile");
+        return { user, profile: profile as UserProfile };
+      } catch (error: any) {
+        // Handle rate limit errors gracefully
+        if (error?.status === 429 || error?.message?.includes('rate limit')) {
+          console.warn('Rate limit reached. Retrying after delay...');
+          // Return cached data if available, otherwise null
+          return { user: null, profile: null };
+        }
+        throw error;
+      }
     },
     staleTime: Infinity,
+    retry: (failureCount, error: any) => {
+      // Don't retry on rate limit errors immediately
+      if (error?.status === 429) {
+        return failureCount < 2;
+      }
+      return failureCount < 3;
+    },
+    retryDelay: (attemptIndex) => {
+      // Exponential backoff for rate limit errors
+      return Math.min(1000 * 2 ** attemptIndex, 30000);
+    },
   });
 
   const value = {

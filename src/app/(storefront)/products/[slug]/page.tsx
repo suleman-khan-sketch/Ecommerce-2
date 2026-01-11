@@ -14,7 +14,7 @@ interface ProductPageProps {
 }
 
 async function getProduct(slug: string) {
-  const supabase = createServerClient();
+  const supabase = await createServerClient();
 
   const { data: product, error } = await supabase
     .from("products")

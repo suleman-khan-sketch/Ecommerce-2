@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 };
 
 async function getOrders() {
-  const supabase = createServerClient();
+  const supabase = await createServerClient();
 
   const {
     data: { user },

@@ -22,7 +22,7 @@ interface PageProps {
 }
 
 async function getOrder(orderId: string) {
-  const supabase = createServerClient();
+  const supabase = await createServerClient();
 
   const {
     data: { user },

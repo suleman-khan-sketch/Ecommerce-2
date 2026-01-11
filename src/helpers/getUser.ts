@@ -6,7 +6,7 @@ import { createServerClient } from "@/lib/supabase/server";
  * @returns A Promise that resolves to the user data.
  */
 export async function getUser(): Promise<User | null> {
-  const supabase = createServerClient();
+  const supabase = await createServerClient();
 
   // Call Supabase's getUser() method to retrieve user data.
   const {

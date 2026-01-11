@@ -32,7 +32,7 @@ export async function generateMetadata({
 }: PageParams): Promise<Metadata> {
   const { id } = await params;
   try {
-    const { order } = await fetchOrderDetails(createServerClient(), { id });
+    const { order } = await fetchOrderDetails(await createServerClient(), { id });
     return { title: `Order #${order.invoice_no}` };
   } catch {
     return { title: "Order not found" };
@@ -42,7 +42,7 @@ export async function generateMetadata({
 export default async function AdminOrderDetailPage({ params }: PageParams) {
   const { id } = await params;
   try {
-    const { order } = await fetchOrderDetails(createServerClient(), { id });
+    const { order } = await fetchOrderDetails(await createServerClient(), { id });
 
     return (
       <section>

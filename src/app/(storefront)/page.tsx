@@ -48,7 +48,7 @@ const featuresWhyChooseUs = [
 ];
 
 async function getFeaturedProducts(): Promise<Product[]> {
-  const supabase = createServerClient();
+  const supabase = await createServerClient();
 
   const { data: products, error } = await supabase
     .from("products")
@@ -92,7 +92,7 @@ async function getFeaturedProducts(): Promise<Product[]> {
 }
 
 async function getCategories() {
-  const supabase = createServerClient();
+  const supabase = await createServerClient();
 
   const { data: categories, error } = await supabase
     .from("categories")
