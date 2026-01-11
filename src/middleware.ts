@@ -39,7 +39,13 @@ export async function middleware(req: NextRequest) {
             request: req,
           });
           cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
+            supabaseResponse.cookies.set(name, value, {
+              ...options,
+              // Ensure cookies work in production HTTPS
+              secure: process.env.NODE_ENV === "production",
+              sameSite: "lax",
+              path: "/",
+            })
           );
         },
       },

@@ -1,12 +1,16 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { createServerClient } from "@supabase/ssr";
+import { createServerClient, type CookieOptions } from "@supabase/ssr";
 
 import { signupFormSchema } from "@/app/(authentication)/signup/_components/schema";
 import validateFormData from "@/helpers/validateFormData";
 
 export async function POST(request: Request) {
   const cookieStore = cookies();
+
+  // Store cookies to be set in the response
+  const cookiesToSet: { name: string; value: string; options: CookieOptions }[] = [];
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -15,10 +19,10 @@ export async function POST(request: Request) {
         getAll() {
           return cookieStore.getAll();
         },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) =>
-            cookieStore.set(name, value, options)
-          );
+        setAll(cookies) {
+          cookies.forEach((cookie) => {
+            cookiesToSet.push(cookie);
+          });
         },
       },
     }
@@ -65,6 +69,19 @@ export async function POST(request: Request) {
     );
   }
 
-  // If sign-up is successful, return a JSON response indicating success.
-  return NextResponse.json({ success: true });
+  // Create response and set cookies on it
+  const response = NextResponse.json({ success: true });
+  
+  // Set all cookies on the response with proper production settings
+  cookiesToSet.forEach(({ name, value, options }) => {
+    response.cookies.set(name, value, {
+      ...options,
+      // Ensure cookies work in production HTTPS
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+    });
+  });
+
+  return response;
 }
