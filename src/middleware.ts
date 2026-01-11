@@ -1,4 +1,4 @@
-import { createMiddlewareClient } from "@supabase/auth-helpers-nextjs";
+import { createServerClient } from "@supabase/ssr";
 import { NextRequest, NextResponse } from "next/server";
 
 // Routes that require authentication
@@ -8,18 +8,47 @@ const protectedRoutes = ["/account", "/checkout"];
 const adminRoutes = ["/admin"];
 
 // Auth routes - redirect to home if already logged in
-const authRoutes = ["/login", "/signup", "/forgot-password", "/update-password"];
+const authRoutes = [
+  "/login",
+  "/signup",
+  "/forgot-password",
+  "/update-password",
+];
 
 // Public routes that don't require any authentication
 const publicRoutes = ["/", "/products"];
 
 export async function middleware(req: NextRequest) {
-  const res = NextResponse.next();
-  const supabase = createMiddlewareClient({ req, res });
+  let supabaseResponse = NextResponse.next({
+    request: req,
+  });
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return req.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) =>
+            req.cookies.set(name, value)
+          );
+          supabaseResponse = NextResponse.next({
+            request: req,
+          });
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options)
+          );
+        },
+      },
+    }
+  );
+
   const pathname = req.nextUrl.pathname;
 
-  // Use getUser() instead of getSession() - this validates the JWT on the server
-  // getSession() is unreliable in production as it only reads from cookies without validation
+  // Use getUser() - this validates the JWT on the server
   const {
     data: { user },
     error,
@@ -45,7 +74,7 @@ export async function middleware(req: NextRequest) {
 
   // Public routes - allow access without authentication
   if (isPublicRoute && !isAdminRoute && !isProtectedRoute) {
-    return res;
+    return supabaseResponse;
   }
 
   // Admin routes - require authentication and staff role
@@ -72,7 +101,7 @@ export async function middleware(req: NextRequest) {
       return NextResponse.redirect(new URL("/", req.url));
     }
 
-    return res;
+    return supabaseResponse;
   }
 
   // Protected routes (account, checkout) - require authentication
@@ -82,16 +111,16 @@ export async function middleware(req: NextRequest) {
       loginUrl.searchParams.set("redirect_to", pathname);
       return NextResponse.redirect(loginUrl);
     }
-    return res;
+    return supabaseResponse;
   }
 
   // Auth routes - allow access for non-authenticated users
   if (isAuthRoute) {
-    return res;
+    return supabaseResponse;
   }
 
   // Default: allow access
-  return res;
+  return supabaseResponse;
 }
 
 export const config = {

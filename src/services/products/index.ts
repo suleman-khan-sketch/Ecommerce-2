@@ -65,7 +65,7 @@ export async function fetchProducts(
     query = query.order("created_at", { ascending: false });
   }
 
-  const paginatedProducts = await queryPaginatedTable<Product, "products">({
+  const paginatedProducts = await queryPaginatedTable<Product>({
     name: "products",
     page,
     limit,

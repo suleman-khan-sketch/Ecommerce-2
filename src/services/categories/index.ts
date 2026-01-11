@@ -21,7 +21,7 @@ export async function fetchCategories(
 
   query = query.order("created_at", { ascending: false });
 
-  const paginatedCategories = await queryPaginatedTable<Category, "categories">(
+  const paginatedCategories = await queryPaginatedTable<Category>(
     {
       name: "categories",
       page,

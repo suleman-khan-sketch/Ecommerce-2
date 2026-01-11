@@ -16,7 +16,7 @@ export async function fetchCoupons(
 
   query = query.order("created_at", { ascending: false });
 
-  const paginatedCoupons = await queryPaginatedTable<Coupon, "coupons">({
+  const paginatedCoupons = await queryPaginatedTable<Coupon>({
     name: "coupons",
     page,
     limit,

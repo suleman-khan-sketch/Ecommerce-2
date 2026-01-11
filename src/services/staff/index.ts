@@ -31,12 +31,12 @@ export async function fetchStaff(
   }
 
   if (role) {
-    query = query.eq("staff_roles.name", role);
+    query = query.eq("staff_roles.name", role as Database["public"]["Enums"]["staff_role"]);
   }
 
   query = query.order("created_at", { ascending: false });
 
-  const paginatedStaff = await queryPaginatedTable<Staff, "staff">({
+  const paginatedStaff = await queryPaginatedTable<Staff>({
     name: "staff",
     page,
     limit,

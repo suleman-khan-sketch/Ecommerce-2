@@ -23,7 +23,7 @@ export async function fetchCustomers(
 
   query = query.order("created_at", { ascending: false });
 
-  const paginatedCustomers = await queryPaginatedTable<Customer, "customers">({
+  const paginatedCustomers = await queryPaginatedTable<Customer>({
     name: "customers",
     page,
     limit,

@@ -35,11 +35,11 @@ export async function fetchOrders(
   }
 
   if (status) {
-    query = query.eq("status", status);
+    query = query.eq("status", status as Database["public"]["Enums"]["order_status_enum"]);
   }
 
   if (method) {
-    query = query.eq("payment_method", method);
+    query = query.eq("payment_method", method as Database["public"]["Enums"]["payment_method_enum"]);
   }
 
   if (startDate) {
@@ -56,7 +56,7 @@ export async function fetchOrders(
 
   query = query.order("created_at", { ascending: false });
 
-  const paginatedOrders = await queryPaginatedTable<Order, "orders">({
+  const paginatedOrders = await queryPaginatedTable<Order>({
     name: "orders",
     page,
     limit,
