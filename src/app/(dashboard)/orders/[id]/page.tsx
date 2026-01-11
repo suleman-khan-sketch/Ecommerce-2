@@ -43,6 +43,9 @@ export async function generateMetadata({
   }
 }
 
+// Force dynamic rendering to ensure cookies() works properly
+export const dynamic = 'force-dynamic';
+
 export default async function Order({ params: { id } }: PageParams) {
   try {
     const { order } = await fetchOrderDetails(await createServerClient(), {

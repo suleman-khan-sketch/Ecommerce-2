@@ -18,6 +18,9 @@ export const metadata: Metadata = {
   description: "Manage your account and view your orders",
 };
 
+// Force dynamic rendering to ensure cookies() works properly
+export const dynamic = 'force-dynamic';
+
 interface CustomerProfile {
   name: string;
   image_url: string | null;

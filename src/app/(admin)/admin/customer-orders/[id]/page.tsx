@@ -29,6 +29,9 @@ export async function generateMetadata({
   return { title: `${customer.name}'s Orders` };
 }
 
+// Force dynamic rendering to ensure cookies() works properly
+export const dynamic = 'force-dynamic';
+
 export default async function AdminCustomerOrdersPage({ params }: PageParams) {
   const { id } = await params;
   const supabase = await createServerClient();

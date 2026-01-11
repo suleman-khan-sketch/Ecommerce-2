@@ -34,6 +34,9 @@ export async function generateMetadata({
   }
 }
 
+// Force dynamic rendering to ensure cookies() works properly
+export const dynamic = 'force-dynamic';
+
 export default async function AdminProductDetailPage({ params }: PageProps) {
   const { slug } = await params;
   const supabase = await createServerClient();

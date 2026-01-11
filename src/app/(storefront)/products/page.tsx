@@ -11,6 +11,9 @@ export const metadata: Metadata = {
   description: "Browse our collection of premium products",
 };
 
+// Force dynamic rendering to ensure cookies() works properly
+export const dynamic = 'force-dynamic';
+
 interface ProductsPageProps {
   searchParams: Promise<{
     category?: string;

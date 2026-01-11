@@ -13,6 +13,9 @@ export const metadata: Metadata = {
   description: "View your order history",
 };
 
+// Force dynamic rendering to ensure cookies() works properly
+export const dynamic = 'force-dynamic';
+
 async function getOrders() {
   const supabase = await createServerClient();
 

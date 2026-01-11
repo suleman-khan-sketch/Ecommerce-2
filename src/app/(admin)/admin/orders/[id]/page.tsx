@@ -39,6 +39,9 @@ export async function generateMetadata({
   }
 }
 
+// Force dynamic rendering to ensure cookies() works properly
+export const dynamic = 'force-dynamic';
+
 export default async function AdminOrderDetailPage({ params }: PageParams) {
   const { id } = await params;
   try {

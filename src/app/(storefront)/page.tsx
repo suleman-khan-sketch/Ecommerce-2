@@ -20,6 +20,9 @@ export const metadata: Metadata = {
   description: SITE_CONFIG.description,
 };
 
+// Force dynamic rendering to ensure cookies() works properly
+export const dynamic = 'force-dynamic';
+
 const featuresWhyChooseUs = [
   {
     description:

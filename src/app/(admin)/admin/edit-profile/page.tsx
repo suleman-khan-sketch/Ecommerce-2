@@ -10,6 +10,9 @@ export const metadata: Metadata = {
   title: "Edit Profile",
 };
 
+// Force dynamic rendering to ensure cookies() works properly
+export const dynamic = 'force-dynamic';
+
 export default async function AdminEditProfilePage() {
   const profile = await fetchStaffDetails(await createServerClient());
 
