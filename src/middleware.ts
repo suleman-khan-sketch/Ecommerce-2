@@ -23,6 +23,25 @@ export async function middleware(req: NextRequest) {
     request: req,
   });
 
+  const pathname = req.nextUrl.pathname;
+
+  // Check if current path matches any route pattern BEFORE making auth requests
+  const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
+  const isAdminRoute = adminRoutes.some((route) => pathname.startsWith(route));
+  const isProtectedRoute = protectedRoutes.some((route) =>
+    pathname.startsWith(route)
+  );
+  const isPublicRoute =
+    publicRoutes.some(
+      (route) => pathname === route || pathname.startsWith(`${route}/`)
+    ) || pathname === "/";
+
+  // For truly public routes that don't need auth check, skip Supabase calls entirely
+  // This prevents unnecessary rate limiting
+  if (isPublicRoute && !isAdminRoute && !isProtectedRoute && !isAuthRoute) {
+    return supabaseResponse;
+  }
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -52,8 +71,6 @@ export async function middleware(req: NextRequest) {
     }
   );
 
-  const pathname = req.nextUrl.pathname;
-
   // Use getUser() - this validates the JWT on the server
   const {
     data: { user },
@@ -61,17 +78,6 @@ export async function middleware(req: NextRequest) {
   } = await supabase.auth.getUser();
 
   const isLoggedIn = !!user && !error;
-
-  // Check if current path matches any route pattern
-  const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
-  const isAdminRoute = adminRoutes.some((route) => pathname.startsWith(route));
-  const isProtectedRoute = protectedRoutes.some((route) =>
-    pathname.startsWith(route)
-  );
-  const isPublicRoute =
-    publicRoutes.some(
-      (route) => pathname === route || pathname.startsWith(`${route}/`)
-    ) || pathname === "/";
 
   // If user is logged in and tries to access auth routes, redirect to home
   if (isLoggedIn && isAuthRoute) {

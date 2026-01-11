@@ -42,8 +42,9 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event) => {
-      // Only invalidate on meaningful auth events, not on token refresh
-      if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'USER_UPDATED') {
+      // Only invalidate on sign in/out events, not on token refresh
+      // TOKEN_REFRESHED happens frequently and should NOT trigger refetch
+      if (event === "SIGNED_IN" || event === "SIGNED_OUT") {
         queryClient.invalidateQueries({ queryKey: ["user-profile"] });
       }
     });
@@ -56,41 +57,32 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const { data, isLoading } = useQuery({
     queryKey: ["user-profile"],
     queryFn: async () => {
+      // Use getSession() on client side - reads from local storage without API call
+      // The middleware handles server-side validation with getUser()
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session?.user) {
+        return { user: null, profile: null };
+      }
+
       try {
-        // Use getUser() instead of getSession() for reliable auth state
-        const {
-          data: { user },
-          error,
-        } = await supabase.auth.getUser();
-
-        if (!user || error) {
-          return { user: null, profile: null };
-        }
-
         const { data: profile } = await supabase.rpc("get_my_profile");
-        return { user, profile: profile as UserProfile };
+        return { user: session.user, profile: profile as UserProfile };
       } catch (error: any) {
         // Handle rate limit errors gracefully
-        if (error?.status === 429 || error?.message?.includes('rate limit')) {
-          console.warn('Rate limit reached. Retrying after delay...');
-          // Return cached data if available, otherwise null
-          return { user: null, profile: null };
+        if (error?.status === 429 || error?.message?.includes("rate limit")) {
+          console.warn("Rate limit reached, using session without profile");
+          return { user: session.user, profile: null };
         }
         throw error;
       }
     },
-    staleTime: Infinity,
-    retry: (failureCount, error: any) => {
-      // Don't retry on rate limit errors immediately
-      if (error?.status === 429) {
-        return failureCount < 2;
-      }
-      return failureCount < 3;
-    },
-    retryDelay: (attemptIndex) => {
-      // Exponential backoff for rate limit errors
-      return Math.min(1000 * 2 ** attemptIndex, 30000);
-    },
+    staleTime: 5 * 60 * 1000, // 5 minutes - don't refetch too often
+    gcTime: 10 * 60 * 1000, // 10 minutes cache time
+    refetchOnWindowFocus: false, // Prevent refetching on tab switch
+    retry: false, // Don't retry failed requests to prevent rate limiting
   });
 
   const value = {
