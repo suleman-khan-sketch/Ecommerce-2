@@ -3,7 +3,7 @@
 import axios from "axios";
 import { useEffect } from "react";
 import { toast } from "sonner";
-import { redirect, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -79,8 +79,10 @@ export default function LoginForm() {
   useEffect(() => {
     if (isSuccess) {
       const redirectTo = searchParams.get("redirect_to");
-
-      return redirect(redirectTo || "/");
+      // Force full page reload to ensure cookies are properly read by middleware
+      // This is necessary for production environments where client-side navigation
+      // may not pick up newly set auth cookies
+      window.location.href = redirectTo || "/";
     }
   }, [isSuccess, searchParams]);
 

@@ -18,11 +18,14 @@ export async function middleware(req: NextRequest) {
   const supabase = createMiddlewareClient({ req, res });
   const pathname = req.nextUrl.pathname;
 
+  // Use getUser() instead of getSession() - this validates the JWT on the server
+  // getSession() is unreliable in production as it only reads from cookies without validation
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
 
-  const isLoggedIn = !!session?.user;
+  const isLoggedIn = !!user && !error;
 
   // Check if current path matches any route pattern
   const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));

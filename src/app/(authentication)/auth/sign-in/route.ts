@@ -6,7 +6,8 @@ import { loginFormSchema } from "@/app/(authentication)/login/_components/schema
 import validateFormData from "@/helpers/validateFormData";
 
 export async function POST(request: Request) {
-  const supabase = createRouteHandlerClient({ cookies });
+  const cookieStore = cookies();
+  const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
 
   // Get form fields
   const { email, password } = await request.json();

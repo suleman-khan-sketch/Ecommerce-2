@@ -53,15 +53,17 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const { data, isLoading } = useQuery({
     queryKey: ["user-profile"],
     queryFn: async () => {
+      // Use getUser() instead of getSession() for reliable auth state
       const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session?.user) {
+        data: { user },
+        error,
+      } = await supabase.auth.getUser();
+      if (!user || error) {
         return { user: null, role: null };
       }
 
       const { data: profile } = await supabase.rpc("get_my_profile");
-      return { user: session.user, profile: profile as UserProfile };
+      return { user, profile: profile as UserProfile };
     },
     staleTime: Infinity,
   });
